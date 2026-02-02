@@ -3,116 +3,496 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Minecraft Skin Viewer</title>
+    <title>Custom4 Skin Viewer</title>
     <style>
-        body {
+        * {
             margin: 0;
             padding: 0;
-            background-color: #f0f0f0; /* Warna latar belakang */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            font-family: Arial, sans-serif;
-            overflow: hidden; /* Mencegah scrollbar di iframe */
-        }
-
-        #skin-container {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-        }
-
-        /* Styling canvas agar responsif di dalam iframe */
-        canvas {
-            outline: none;
-            cursor: move; /* Indikator bahwa bisa digerakkan */
-        }
-
-        /* Panel kontrol opsional (tombol upload jika gambar lokal tidak muncul) */
-        .controls {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 10px;
-            border-radius: 8px;
-            color: white;
-            font-size: 12px;
-            z-index: 10;
+            box-sizing: border-box;
         }
         
-        input[type="file"] {
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        header {
+            margin-bottom: 30px;
+            padding: 25px;
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 16px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #60a5fa;
+            text-shadow: 0 0 15px rgba(96, 165, 250, 0.4);
+        }
+        
+        .skin-info {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 8px;
+            display: inline-block;
+        }
+        
+        .skin-info strong {
+            color: #38bdf8;
+        }
+        
+        .viewer-wrapper {
+            position: relative;
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+        }
+        
+        .skin-canvas-container {
+            width: 100%;
+            height: 500px;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #0f172a;
+        }
+        
+        #skinCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 25px;
+            padding: 20px;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 12px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
             color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            min-width: 160px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+            background: linear-gradient(135deg, #60a5fa, #2563eb);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        }
+        
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(-1px);
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: 500;
+            display: none;
+        }
+        
+        .status.success {
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #4ade80;
+            display: block;
+        }
+        
+        .status.error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #f87171;
+            display: block;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.2rem;
+            color: #94a3b8;
+        }
+        
+        .instructions {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 12px;
+            text-align: left;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+        }
+        
+        .instructions h3 {
+            color: #38bdf8;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+        
+        .instructions ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+            opacity: 0.9;
+        }
+        
+        .instructions code {
+            background: rgba(15, 23, 42, 0.8);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #fbbf24;
+        }
+        
+        footer {
+            margin-top: 30px;
+            padding: 20px;
+            font-size: 0.9rem;
+            opacity: 0.7;
+            text-align: center;
+            border-top: 1px solid rgba(148, 163, 184, 0.1);
+            width: 100%;
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .skin-canvas-container {
+                height: 400px;
+            }
+            
+            .btn {
+                min-width: 140px;
+                padding: 10px 20px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
         }
     </style>
 </head>
 <body>
-
-    <div id="skin-container">
+    <div class="container">
+        <header>
+            <h1>Custom4 Skin Viewer</h1>
+            <p>Penampil 3D Skin Minecraft - Hanya untuk <strong>custom4.png</strong></p>
+            <div class="skin-info">
+                File skin: <strong>custom4.png</strong> | Format: <strong>64x64 PNG</strong>
+            </div>
+        </header>
+        
+        <main class="viewer-wrapper">
+            <div class="skin-canvas-container">
+                <canvas id="skinCanvas"></canvas>
+                <div class="loading" id="loadingText">Memuat skin viewer...</div>
+            </div>
+            
+            <div class="controls">
+                <button class="btn" id="rotateBtn">Rotasi: ON</button>
+                <button class="btn btn-secondary" id="animationBtn">Animasi: ON</button>
+                <button class="btn" id="zoomInBtn">Zoom In (+)</button>
+                <button class="btn" id="zoomOutBtn">Zoom Out (-)</button>
+                <button class="btn btn-secondary" id="resetBtn">Reset View</button>
+            </div>
+            
+            <div class="status" id="statusMessage"></div>
+        </main>
+        
+        <div class="instructions">
+            <h3>Cara Penggunaan:</h3>
+            <ul>
+                <li>Pastikan file <code>custom4.png</code> berada di folder yang sama dengan file HTML ini</li>
+                <li>Skin akan otomatis dimuat saat halaman dibuka</li>
+                <li>Gunakan tombol di atas untuk mengontrol tampilan 3D</li>
+                <li>Klik dan drag pada skin untuk mengubah sudut pandang manual</li>
+                <li>Gunakan scroll mouse untuk zoom in/out</li>
+            </ul>
         </div>
-
-    <div class="controls">
-        <label>Ganti Skin (Jika perlu): </label>
-        <input type="file" id="skin_input" accept="image/*">
+        
+        <footer>
+            <p>Dibuat dengan SkinView3D - https://github.com/bs-community/skinview3d</p>
+            <p>Skin: custom4.png | Viewer 3D Minecraft</p>
+        </footer>
     </div>
 
-    <script src="https://bs-community.github.io/skinview3d/js/skinview3d.bundle.js"></script>
-
+    <!-- Load Three.js and SkinView3D from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.152.2"></script>
+    <script src="https://unpkg.com/skinview3d@3.4.1/bundles/skinview3d.min.js"></script>
+    
     <script>
-        // 1. Inisialisasi Viewer
-        const skinViewer = new skinview3d.SkinViewer({
-            canvas: document.getElementById("skin-container"),
-            width: 400,  // Lebar awal
-            height: 500, // Tinggi awal
-            skin: "custom4.png" // NAMA FILE GAMBAR KAMU DI SINI
-        });
-
-        // 2. Pengaturan Tampilan (Agar tidak kekecilan/kebesaran)
-        skinViewer.width = window.innerWidth;
-        skinViewer.height = window.innerHeight;
-        skinViewer.fov = 70; // Field of View
-        skinViewer.zoom = 0.9; // Zoom level (0.5 - 1.0 biasanya pas)
-
-        // 3. Pencahayaan & Global Light (Agar grafik terlihat bagus/medium)
-        skinViewer.globalLight.intensity = 0.8; // Cahaya global
-        skinViewer.cameraLight.intensity = 0.6; // Cahaya dari arah kamera
-
-        // 4. Kontrol (Rotasi X dan Y menggunakan mouse)
-        // Auto-rotate dinonaktifkan agar user bisa mengatur sendiri
-        skinViewer.autoRotate = false; 
+        // Inisialisasi variabel
+        let skinViewer = null;
+        let autoRotate = true;
+        let animationEnabled = true;
+        const skinFileName = "custom4.png";
         
-        // Mengatur kontrol mouse
-        skinViewer.controls.enableRotate = true;
-        skinViewer.controls.enableZoom = true;
-        skinViewer.controls.enablePan = false; // Mematikan geser kanan-kiri (hanya rotasi)
-
-        // 5. Animasi (Idle / Diam tapi bernafas agar terlihat hidup)
-        skinViewer.animation = new skinview3d.IdleAnimation();
-        // Jika ingin berjalan, ganti baris di atas dengan:
-        // skinViewer.animation = new skinview3d.WalkingAnimation();
-
-        // --- Fitur Tambahan: Responsif Window ---
-        window.addEventListener("resize", () => {
-            skinViewer.width = window.innerWidth;
-            skinViewer.height = window.innerHeight;
-        });
-
-        // --- Fitur Tambahan: Upload Manual ---
-        // Ini berguna jika browser memblokir akses file lokal (CORS policy)
-        document.getElementById("skin_input").addEventListener("change", (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    skinViewer.loadSkin(e.target.result);
-                };
-                reader.readAsDataURL(file);
+        // Skin default sebagai fallback (Steve skin dalam base64)
+        const defaultSkinBase64 = "data:image/png;base64,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";
+        
+        // Fungsi untuk menampilkan status
+        function showStatus(message, type = 'success') {
+            const statusEl = document.getElementById('statusMessage');
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+            
+            // Sembunyikan setelah 5 detik untuk success, 8 detik untuk error
+            setTimeout(() => {
+                if (statusEl.className.includes(type)) {
+                    statusEl.style.display = 'none';
+                }
+            }, type === 'success' ? 5000 : 8000);
+        }
+        
+        // Fungsi untuk load skin custom4.png
+        function loadCustomSkin() {
+            showStatus("Memuat skin custom4.png...");
+            
+            // Coba load file custom4.png
+            const skinUrl = skinFileName;
+            
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.src = skinUrl;
+            
+            img.onload = function() {
+                // File ditemukan, load ke skin viewer
+                skinViewer.loadSkin(skinUrl);
+                document.getElementById('loadingText').style.display = 'none';
+                showStatus("✅ Skin custom4.png berhasil dimuat!", 'success');
+                
+                console.log("Skin custom4.png berhasil dimuat dari file lokal");
+            };
+            
+            img.onerror = function() {
+                // File tidak ditemukan, gunakan fallback
+                document.getElementById('loadingText').style.display = 'none';
+                showStatus(`❌ File "${skinFileName}" tidak ditemukan. Menggunakan skin default sebagai contoh.`, 'error');
+                
+                // Load skin default
+                skinViewer.loadSkin(defaultSkinBase64);
+                
+                console.warn(`File ${skinFileName} tidak ditemukan di direktori yang sama dengan index.html`);
+                console.info("Pastikan file custom4.png ada di folder yang sama dengan file HTML ini");
+            };
+        }
+        
+        // Fungsi untuk inisialisasi skin viewer
+        function initSkinViewer() {
+            const canvas = document.getElementById('skinCanvas');
+            
+            // Sembunyikan loading text
+            document.getElementById('loadingText').style.display = 'block';
+            
+            // Buat skin viewer
+            skinViewer = new skinview3d.SkinViewer({
+                canvas: canvas,
+                width: canvas.clientWidth,
+                height: canvas.clientHeight,
+                skin: defaultSkinBase64, // Gunakan default dulu
+            });
+            
+            // Atur pengaturan default
+            skinViewer.autoRotate = autoRotate;
+            skinViewer.animation = animationEnabled ? new skinview3d.WalkingAnimation() : null;
+            if (skinViewer.animation) {
+                skinViewer.animation.speed = 3;
             }
+            skinViewer.zoom = 0.8;
+            skinViewer.background = 0x0f172a;
+            skinViewer.fov = 50;
+            
+            // Atur pencahayaan
+            skinViewer.cameraLight.intensity = 0.9;
+            skinViewer.globalLight.intensity = 0.3;
+            
+            // Setup tombol kontrol
+            setupControlButtons();
+            
+            // Load skin custom4.png
+            setTimeout(() => {
+                loadCustomSkin();
+            }, 500);
+            
+            // Handle window resize
+            window.addEventListener('resize', handleResize);
+        }
+        
+        // Fungsi untuk setup tombol kontrol
+        function setupControlButtons() {
+            // Tombol rotasi
+            document.getElementById('rotateBtn').addEventListener('click', function() {
+                autoRotate = !autoRotate;
+                skinViewer.autoRotate = autoRotate;
+                this.textContent = `Rotasi: ${autoRotate ? 'ON' : 'OFF'}`;
+                this.classList.toggle('btn-secondary', !autoRotate);
+                showStatus(`Rotasi otomatis: ${autoRotate ? 'DIHIDUPKAN' : 'DIMATIKAN'}`);
+            });
+            
+            // Tombol animasi
+            document.getElementById('animationBtn').addEventListener('click', function() {
+                animationEnabled = !animationEnabled;
+                
+                if (animationEnabled) {
+                    skinViewer.animation = new skinview3d.WalkingAnimation();
+                    skinViewer.animation.speed = 3;
+                } else {
+                    skinViewer.animation = null;
+                }
+                
+                this.textContent = `Animasi: ${animationEnabled ? 'ON' : 'OFF'}`;
+                this.classList.toggle('btn-secondary', !animationEnabled);
+                showStatus(`Animasi jalan: ${animationEnabled ? 'DIHIDUPKAN' : 'DIMATIKAN'}`);
+            });
+            
+            // Tombol zoom in
+            document.getElementById('zoomInBtn').addEventListener('click', function() {
+                if (skinViewer.zoom < 1.5) {
+                    skinViewer.zoom += 0.1;
+                    showStatus(`Zoom: ${skinViewer.zoom.toFixed(1)}x`);
+                } else {
+                    showStatus("Zoom maksimum tercapai", 'error');
+                }
+            });
+            
+            // Tombol zoom out
+            document.getElementById('zoomOutBtn').addEventListener('click', function() {
+                if (skinViewer.zoom > 0.3) {
+                    skinViewer.zoom -= 0.1;
+                    showStatus(`Zoom: ${skinViewer.zoom.toFixed(1)}x`);
+                } else {
+                    showStatus("Zoom minimum tercapai", 'error');
+                }
+            });
+            
+            // Tombol reset
+            document.getElementById('resetBtn').addEventListener('click', function() {
+                skinViewer.zoom = 0.8;
+                skinViewer.fov = 50;
+                skinViewer.autoRotate = autoRotate;
+                
+                // Reset animasi jika sebelumnya enabled
+                if (animationEnabled) {
+                    skinViewer.animation = new skinview3d.WalkingAnimation();
+                    skinViewer.animation.speed = 3;
+                }
+                
+                showStatus("Tampilan direset ke pengaturan default");
+            });
+            
+            // Tambahkan kontrol keyboard
+            document.addEventListener('keydown', function(e) {
+                switch(e.key) {
+                    case 'r':
+                    case 'R':
+                        document.getElementById('rotateBtn').click();
+                        break;
+                    case 'a':
+                    case 'A':
+                        document.getElementById('animationBtn').click();
+                        break;
+                    case '+':
+                    case '=':
+                        document.getElementById('zoomInBtn').click();
+                        break;
+                    case '-':
+                    case '_':
+                        document.getElementById('zoomOutBtn').click();
+                        break;
+                    case '0':
+                        document.getElementById('resetBtn').click();
+                        break;
+                }
+            });
+        }
+        
+        // Fungsi untuk handle resize window
+        function handleResize() {
+            if (skinViewer) {
+                const canvas = document.getElementById('skinCanvas');
+                skinViewer.width = canvas.clientWidth;
+                skinViewer.height = canvas.clientHeight;
+            }
+        }
+        
+        // Inisialisasi ketika halaman selesai dimuat
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cek dulu apakah Three.js dan SkinView3D tersedia
+            if (typeof THREE === 'undefined') {
+                showStatus("❌ Error: THREE.js tidak dapat dimuat. Cek koneksi internet.", 'error');
+                return;
+            }
+            
+            if (typeof skinview3d === 'undefined') {
+                showStatus("❌ Error: SkinView3D tidak dapat dimuat. Cek koneksi internet.", 'error');
+                return;
+            }
+            
+            initSkinViewer();
+            
+            // Tampilkan petunjuk keyboard
+            setTimeout(() => {
+                showStatus("Tips: Gunakan tombol R (Rotasi), A (Animasi), +/- (Zoom), 0 (Reset)");
+            }, 3000);
         });
+        
+        // Fallback jika CDN gagal load
+        window.addEventListener('error', function(e) {
+            if (e.target.tagName === 'SCRIPT' && 
+                (e.target.src.includes('three.js') || e.target.src.includes('skinview3d'))) {
+                showStatus("❌ Error: Gagal memuat library 3D. Pastikan koneksi internet stabil.", 'error');
+                document.getElementById('loadingText').textContent = "Gagal memuat library 3D. Coba refresh halaman.";
+            }
+        }, true);
     </script>
 </body>
 </html>
