@@ -5,61 +5,113 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Minecraft Skin Viewer</title>
     <style>
-        body, html {
+        body {
             margin: 0;
             padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background-color: #1a1a1a; /* Background gelap agar skin lebih menonjol */
-        }
-
-        #skin-container {
-            width: 100vw;
-            height: 100vh;
+            background-color: #f0f0f0; /* Warna latar belakang */
             display: flex;
             justify-content: center;
             align-items: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+            overflow: hidden; /* Mencegah scrollbar di iframe */
+        }
+
+        #skin-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Styling canvas agar responsif di dalam iframe */
+        canvas {
+            outline: none;
+            cursor: move; /* Indikator bahwa bisa digerakkan */
+        }
+
+        /* Panel kontrol opsional (tombol upload jika gambar lokal tidak muncul) */
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 8px;
+            color: white;
+            font-size: 12px;
+            z-index: 10;
+        }
+        
+        input[type="file"] {
+            color: white;
         }
     </style>
 </head>
 <body>
 
-    <div id="skin-container"></div>
+    <div id="skin-container">
+        </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/skinview3d@latest/dist/bundle.js"></script>
+    <div class="controls">
+        <label>Ganti Skin (Jika perlu): </label>
+        <input type="file" id="skin_input" accept="image/*">
+    </div>
+
+    <script src="https://bs-community.github.io/skinview3d/js/skinview3d.bundle.js"></script>
 
     <script>
-        // Inisialisasi Viewer
-        // Kita arahkan ke elemen div, bukan canvas langsung agar library yang mengurus pembuatannya
+        // 1. Inisialisasi Viewer
         const skinViewer = new skinview3d.SkinViewer({
-            container: document.getElementById("skin-container"),
-            width: window.innerWidth,
-            height: window.innerHeight,
-            skin: "custom4.png" // Skin tetap
+            canvas: document.getElementById("skin-container"),
+            width: 400,  // Lebar awal
+            height: 500, // Tinggi awal
+            skin: "custom4.png" // NAMA FILE GAMBAR KAMU DI SINI
         });
 
-        // Konfigurasi Pencahayaan Medium (Bagus & Tidak Berat)
-        skinViewer.renderer.setPixelRatio(window.devicePixelRatio);
-        skinViewer.globalLight.intensity = 0.50;
-        skinViewer.cameraLight.intensity = 0.60;
+        // 2. Pengaturan Tampilan (Agar tidak kekecilan/kebesaran)
+        skinViewer.width = window.innerWidth;
+        skinViewer.height = window.innerHeight;
+        skinViewer.fov = 70; // Field of View
+        skinViewer.zoom = 0.9; // Zoom level (0.5 - 1.0 biasanya pas)
 
-        // Atur posisi pandangan & Zoom agar body tidak kekecilan/kebesaran
-        skinViewer.zoom = 0.8;
-        skinViewer.fov = 70;
+        // 3. Pencahayaan & Global Light (Agar grafik terlihat bagus/medium)
+        skinViewer.globalLight.intensity = 0.8; // Cahaya global
+        skinViewer.cameraLight.intensity = 0.6; // Cahaya dari arah kamera
 
-        // Kontrol rotasi hanya untuk X dan Y (Mouse/Touch)
+        // 4. Kontrol (Rotasi X dan Y menggunakan mouse)
+        // Auto-rotate dinonaktifkan agar user bisa mengatur sendiri
+        skinViewer.autoRotate = false; 
+        
+        // Mengatur kontrol mouse
         skinViewer.controls.enableRotate = true;
         skinViewer.controls.enableZoom = true;
-        skinViewer.controls.enablePan = false;
+        skinViewer.controls.enablePan = false; // Mematikan geser kanan-kiri (hanya rotasi)
 
-        // Berikan sedikit animasi agar terlihat hidup (Idle)
+        // 5. Animasi (Idle / Diam tapi bernafas agar terlihat hidup)
         skinViewer.animation = new skinview3d.IdleAnimation();
+        // Jika ingin berjalan, ganti baris di atas dengan:
+        // skinViewer.animation = new skinview3d.WalkingAnimation();
 
-        // Mengatasi perubahan ukuran window/iframe
+        // --- Fitur Tambahan: Responsif Window ---
         window.addEventListener("resize", () => {
             skinViewer.width = window.innerWidth;
             skinViewer.height = window.innerHeight;
+        });
+
+        // --- Fitur Tambahan: Upload Manual ---
+        // Ini berguna jika browser memblokir akses file lokal (CORS policy)
+        document.getElementById("skin_input").addEventListener("change", (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    skinViewer.loadSkin(e.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
         });
     </script>
 </body>
